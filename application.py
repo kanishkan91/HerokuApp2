@@ -17,7 +17,7 @@ import numpy as np
 import pandas as pd
 import pandas
 import xlsxwriter
-import plotly
+
 
 def EMA(df, base, target, period, alpha=False):
     """
