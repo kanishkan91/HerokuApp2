@@ -2,8 +2,6 @@
 
 #app = Flask(__name__)
 
-
-
  # import DataUpdate
 import pandas as pd
 import plotly.plotly as py
@@ -16,7 +14,7 @@ import numpy as np
 #import technical_indicators as ts
 import pandas as pd
 import pandas
-import xlsxwriter
+#import xlsxwriter
 
 
 def EMA(df, base, target, period, alpha=False):
@@ -179,6 +177,7 @@ r = pd.melt(r, id_vars=['date','STX_7_3'], var_name='Type', value_name='values')
 
 app = dash.Dash(__name__)
 application=app.server
+
 styles = {
     'pre': {
         'border': 'thin lightgrey solid',
