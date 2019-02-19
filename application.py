@@ -1,8 +1,5 @@
 
-    ATR(df, period, ohlc=ohlc)
-    atr = 'ATR_' + str(period)
-    st = 'ST_' + str(period) + '_' + str(multiplier)
-    stx = 'STX_' + str(period) + '_' + str(multiplier)
+    
 import pandas as pd
 import plotly.plotly as py
 import plotly
