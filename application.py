@@ -1,4 +1,8 @@
 
+    ATR(df, period, ohlc=ohlc)
+    atr = 'ATR_' + str(period)
+    st = 'ST_' + str(period) + '_' + str(multiplier)
+    stx = 'STX_' + str(period) + '_' + str(multiplier)
 import pandas as pd
 import plotly.plotly as py
 import plotly
@@ -7,12 +11,15 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import numpy as np
-#import technical_indicators as ts
+import technical_indicators as ts
 import pandas as pd
 import pandas
 import xlsxwriter
 import plotly
 import quandl
+from plotly import tools
+import datetime
+import glob
 
 def EMA(df, base, target, period, alpha=False):
     """
@@ -92,11 +99,6 @@ def SuperTrend(df, period, multiplier, ohlc=['Open', 'High', 'Low', 'Close']):
             SuperTrend Direction (STX_$period_$multiplier)
     """
 
-    ATR(df, period, ohlc=ohlc)
-    atr = 'ATR_' + str(period)
-    st = 'ST_' + str(period) + '_' + str(multiplier)
-    stx = 'STX_' + str(period) + '_' + str(multiplier)
-
     """
     SuperTrend Algorithm :
 
@@ -160,20 +162,49 @@ def SuperTrend(df, period, multiplier, ohlc=['Open', 'High', 'Low', 'Close']):
 
 
 #Step 2: Bring in data from AKK and read into df
-data=pd.read_excel('ProjectUdaan.xlsx')
-data=pd.DataFrame(data)
-print(data.head())
 
+path = (r'Data')
 
+filenames = glob.glob(path + "/*.csv")
+print("Reading files from path" + str(path))
+
+data= []
+for filename in filenames:
+    filename = pd.read_csv(filename)
+        #filename = pd.merge(filename, CountryConcord, how='left', left_on='location_name',
+                            #right_on='Country name in IHME')
+        #filename = pd.merge(filename, SeriesConcord, how='left', left_on='cause_name', right_on='Series name in IHME')
+    filename = filename.dropna(how='any')
+        # GBDDalys.append(pd.read_csv(filename,low_memory=False))
+    data.append(filename)
+
+data = pd.concat(data, ignore_index=True)
+
+#data=pd.read_excel('ProjectUdaan.xlsx')
+data9=pd.DataFrame(data)
+#data1=data1.iloc[2:]
+#print(list(data1))
+data9.columns=['Symbol', 'Series', 'date', 'Prev Close', 'Open Price', 'High', 'Low', 'Last', 'Close', 'Average Price', 'Total Traded Quantity', 'Turnover', 'No. of Trades']
+data9=data9.drop([ 'Series', 'Prev Close', 'Open Price',  'Last',  'Average Price', 'Total Traded Quantity', 'Turnover', 'No. of Trades'],axis=1)
 #EMA(data,'open','new',7,alpha=True)
-r= SuperTrend(data,7,3)
-r = pd.melt(r, id_vars=['date','STX_7_3'], var_name='Type', value_name='values')
+print(data9.head())
+r= SuperTrend(data9,14,2)
+r=r.reset_index()
+#r=r.iloc[:2]
+r=r.iloc[14:]
+#year2=[2018,2019]
+r['date']=pd.to_datetime(r['date'])
+#r=r[r['date'].dt.year.isin(year2)]
+#df=df[df.Year.isin(years)]
+print("rhead")
+print(r.head())
+r = pd.melt(r, id_vars=['date','STX_14_2'], var_name='Type', value_name='values')
+
 #print(r.head())
 
 #external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__)
-application=app.server
 styles = {
     'pre': {
         'border': 'thin lightgrey solid',
@@ -194,10 +225,10 @@ trace1 = go.Box(
         )
     )
 
-opt2 = ['ST_7_3']
+opt2 = ['ST_14_2']
 data2 = r[r.Type.isin(opt2)]
 
-data2 = data2.loc[data2['STX_7_3'] == 'up']
+data2 = data2.loc[data2['STX_14_2'] == 'up']
 data2 = data2.drop_duplicates('date')
 print(data2.head())
 trace2 = go.Scatter(
@@ -211,10 +242,10 @@ trace2 = go.Scatter(
         )
     )
 
-opt4 = ['ST_7_3']
+opt4 = ['ST_14_2']
 data4 = r[r.Type.isin(opt4)]
 
-data4 = data4.loc[data4['STX_7_3'] == 'down']
+data4 = data4.loc[data4['STX_14_2'] == 'down']
 data4 = data4.drop_duplicates('date')
 
 trace4 = go.Scatter(
@@ -228,7 +259,7 @@ trace4 = go.Scatter(
         )
     )
 
-opt5 = ['ST_7_3']
+opt5 = ['ST_14_2']
 data5 = r[r.Type.isin(opt5)]
 
 # data5=data4.loc[data4['STX_7_3']=='down']
@@ -245,6 +276,26 @@ trace5 = go.Scatter(
         )
     )
 
+opt6 = ['ATR_14']
+data6 = r[r.Type.isin(opt6)]
+print('data6 heads')
+print(data6.head())
+    # data5=data4.loc[data4['STX_7_3']=='down']
+    # data4=data4.drop_duplicates('date')
+    # print(data4.head())
+trace6 = go.Scatter(
+        y=data6['values'],
+        x=data6['date'],
+        mode='lines',
+        name='ATR',
+        connectgaps=False,
+        marker=dict(
+            color='rgb(107,174,214)'
+        )
+    )
+
+
+
 opt3 = ['Close']
 data3 = r[r.Type.isin(opt3)]
 
@@ -257,23 +308,25 @@ trace3 = go.Scatter(
             color='rgb(214, 12, 140)'
         )
     )
-data = [trace1,trace2,trace4]
+data = [trace1,trace2,trace4,trace3,trace5]
 layout = go.Layout(
         yaxis=dict(
             title='SuperTrend',
             zeroline=False,
 
-        ),height=800)
+        ),xaxis=dict(range=[8000,11500]),height=800)
 
-fig = go.Figure(data=data, layout=layout)
-#plotly.tools.set_credentials_file(username='kanishkan91',api_key='aYeSpFRWLtq4L1a2k6VC')
+
+q=data9.Symbol.unique()
+
+
 
 #figure = dict( data=data, layout=layout )
 app.layout = html.Div([html.Div(
     [
         dcc.Markdown(
             '''
-            ### Live Dashboard showing super trend computed along with the high and low prices.
+            ### Live Dashboard showing super trend computed along with the high and low prices for 50 stocks.
             '''.replace('  ', ''),
             className='eight columns offset-by-three'
         )
@@ -282,38 +335,71 @@ app.layout = html.Div([html.Div(
 ),
 
     html.Div([
-        html.Div(dcc.Input(id='input-box', type='text',value='NSE/NIFTY_50')),
-        html.Button('Submit', id='button'),
+        html.Div(dcc.Dropdown(id='DropDown', options=[{'label': i
+, 'value': i} for i in q],value='ADANIPORTS')),
         html.Div(id='container-button-basic',
-             children='Enter a value and press submit'),
-        dcc.Graph(id='SuperTrend',figure={'data':data,'layout':layout}),
+             children='Select a stock in the above'),
+        dcc.Graph(id='SuperTrend'),
     ],style={ 'width': '100%','float':'left','height':'800px'})
 
 ])
 
 @app.callback(
     dash.dependencies.Output('SuperTrend', 'figure'),
-    [dash.dependencies.Input('input-box', 'value')])
+    [dash.dependencies.Input('DropDown', 'value')])
 
 def update_fig(value):
-    data = quandl.get(value, api_key='fw44D_B2Rv3ZZV-ufqwJ', start_date='2018-01-01', end_date='2019-01-01')
-    data=data.iloc[1:]
-    data.reset_index()
-    data.rename(columns={data.columns[1]:'Date'})
-    #data.drop(['Shares Traded', 'Turnover (Rs. Cr)'], inplace=True, axis=1)
 
-    print("These are API values")
-    print(data.head())
-    r = SuperTrend(data, 7, 3)
-    print("rvalues")
+    path = (r'Data')
+
+    filenames = glob.glob(path + "/*.csv")
+    print("Reading files from path" + str(path))
+    print(value)
+    data = []
+    for filename in filenames:
+        filename = pd.read_csv(filename)
+        # filename = pd.merge(filename, CountryConcord, how='left', left_on='location_name',
+        # right_on='Country name in IHME')
+        # filename = pd.merge(filename, SeriesConcord, how='left', left_on='cause_name', right_on='Series name in IHME')
+        filename = filename.dropna(how='any')
+        # GBDDalys.append(pd.read_csv(filename,low_memory=False))
+        data.append(filename)
+
+    data = pd.concat(data, ignore_index=True)
+
+    # data=pd.read_excel('ProjectUdaan.xlsx')
+    data9 = pd.DataFrame(data)
+    # data1=data1.iloc[2:]
+    # print(list(data1))
+    data9.columns = ['Symbol', 'Series', 'date', 'Prev Close', 'Open Price', 'High', 'Low', 'Last', 'Close',
+                     'Average Price', 'Total Traded Quantity', 'Turnover', 'No. of Trades']
+    data9 = data9.drop(
+        ['Series', 'Prev Close', 'Open Price', 'Last', 'Average Price', 'Total Traded Quantity', 'Turnover',
+         'No. of Trades'], axis=1)
+    print("data9")
+    print(data9.head())
+
+    data9=data9[data["Symbol"]==value]
+    #df = df[df.Year.isin(years)]
+    r = SuperTrend(data9, 14, 2)
+    #r = r.iloc[:2]
+    r = r.iloc[14:]
+    # year2=[2018,2019]
+    #r['date'] = pd.to_datetime(r['date'])
+    #r = r[r['date'].dt.year.isin(year2)]
+    # df=df[df.Year.isin(years)]
+    print("rhead")
+    #print(r.head())
+    r = pd.melt(r, id_vars=['Symbol','date', 'STX_14_2'], var_name='Type', value_name='values')
+    'Final r'
     print(r.head())
-    r = r.reset_index()
-    r = pd.melt(r, id_vars=['Date', 'STX_7_3'], var_name='Type', value_name='values')
 
-    #r = pd.melt(r, id_vars=['date', 'STX_7_3'], var_name='Type', value_name='values')
+    # external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+
+
     opt = ['Open', 'High', 'Low', 'Close']
     data1 = r[r.Type.isin(opt)]
-    x = data1['Date']
+    x = data1['date']
 
     trace1 = go.Box(
         y=data1['values'],
@@ -324,15 +410,15 @@ def update_fig(value):
         )
     )
 
-    opt2 = ['ST_7_3']
+    opt2 = ['ST_14_2']
     data2 = r[r.Type.isin(opt2)]
 
-    data2 = data2.loc[data2['STX_7_3'] == 'up']
-    data2 = data2.drop_duplicates('Date')
+    data2 = data2.loc[data2['STX_14_2'] == 'up']
+    data2 = data2.drop_duplicates('date')
     print(data2.head())
     trace2 = go.Scatter(
         y=data2['values'],
-        x=data2['Date'],
+        x=data2['date'],
         mode='markers',
         name='SuperTrend Low',
         connectgaps=False,
@@ -341,15 +427,15 @@ def update_fig(value):
         )
     )
 
-    opt4 = ['ST_7_3']
+    opt4 = ['ST_14_2']
     data4 = r[r.Type.isin(opt4)]
 
-    data4 = data4.loc[data4['STX_7_3'] == 'down']
-    data4 = data4.drop_duplicates('Date')
+    data4 = data4.loc[data4['STX_14_2'] == 'down']
+    data4 = data4.drop_duplicates('date')
 
     trace4 = go.Scatter(
         y=data4['values'],
-        x=data4['Date'],
+        x=data4['date'],
         mode='markers',
         name='SuperTrend High',
         connectgaps=False,
@@ -358,7 +444,7 @@ def update_fig(value):
         )
     )
 
-    opt5 = ['ST_7_3']
+    opt5 = ['ST_14_2']
     data5 = r[r.Type.isin(opt5)]
 
     # data5=data4.loc[data4['STX_7_3']=='down']
@@ -366,12 +452,30 @@ def update_fig(value):
     # print(data4.head())
     trace5 = go.Scatter(
         y=data5['values'],
-        x=data5['Date'],
+        x=data5['date'],
         mode='lines',
         name='SuperTrend',
         connectgaps=False,
         marker=dict(
             color='#3D9970'
+        )
+    )
+
+    opt6 = ['ATR_14']
+    data6 = r[r.Type.isin(opt6)]
+    print('data6 heads')
+    print(data6.head())
+    # data5=data4.loc[data4['STX_7_3']=='down']
+    # data4=data4.drop_duplicates('date')
+    # print(data4.head())
+    trace6 = go.Scatter(
+        y=data6['values'],
+        x=data6['date'],
+        mode='lines',
+        name='ATR',
+        connectgaps=False,
+        marker=dict(
+            color='rgb(107,174,214)'
         )
     )
 
@@ -387,19 +491,25 @@ def update_fig(value):
             color='rgb(214, 12, 140)'
         )
     )
-
-    data = [trace1, trace2, trace4,trace5]
-    layout = go.Layout(title='SperTrend Calculated for '+str(value),
+    data = [trace1, trace2, trace4, trace3, trace5]
+    print('final data')
+    print(data)
+    layout = go.Layout(
         yaxis=dict(
             title='SuperTrend',
             zeroline=False,
 
         ), height=800)
-
     return {'data':data,
             'layout':layout}
 
+#update_fig(value)
 
+#data=data+trace6
+
+
+#plotly.tools.set_credentials_file(username='kanishkan91',api_key='aYeSpFRWLtq4L1a2k6VC')
+#py.plot(fig, filename='ver2',validate=False)
 
 if __name__ == '__main__':
-    application.run_server(debug=True)
+    app.run_server(debug=True)
