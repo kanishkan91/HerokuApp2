@@ -165,25 +165,9 @@ def SuperTrend(df, period, multiplier, ohlc=['Open', 'High', 'Low', 'Close']):
 
 #Step 2: Bring in data from AKK and read into df
 
-path = (r'Data')
-
-filenames = glob.glob(path + "/*.csv")
-print("Reading files from path" + str(path))
-
-data= []
-for filename in filenames:
-    filename = pd.read_csv(filename)
-        #filename = pd.merge(filename, CountryConcord, how='left', left_on='location_name',
-                            #right_on='Country name in IHME')
-        #filename = pd.merge(filename, SeriesConcord, how='left', left_on='cause_name', right_on='Series name in IHME')
-    filename = filename.dropna(how='any')
-        # GBDDalys.append(pd.read_csv(filename,low_memory=False))
-    data.append(filename)
-
-data = pd.concat(data, ignore_index=True)
 
 #data=pd.read_excel('ProjectUdaan.xlsx')
-data9=pd.DataFrame(data)
+data9=pd.read_excel('ConsolidatedData.xlsx')
 #data1=data1.iloc[2:]
 #print(list(data1))
 data9.columns=['Symbol', 'Series', 'date', 'Prev Close', 'Open Price', 'High', 'Low', 'Last', 'Close', 'Average Price', 'Total Traded Quantity', 'Turnover', 'No. of Trades']
@@ -352,25 +336,7 @@ app.layout = html.Div([html.Div(
 
 def update_fig(value):
 
-    path = (r'Data')
-
-    filenames = glob.glob(path + "/*.csv")
-    print("Reading files from path" + str(path))
-    print(value)
-    data = []
-    for filename in filenames:
-        filename = pd.read_csv(filename)
-        # filename = pd.merge(filename, CountryConcord, how='left', left_on='location_name',
-        # right_on='Country name in IHME')
-        # filename = pd.merge(filename, SeriesConcord, how='left', left_on='cause_name', right_on='Series name in IHME')
-        filename = filename.dropna(how='any')
-        # GBDDalys.append(pd.read_csv(filename,low_memory=False))
-        data.append(filename)
-
-    data = pd.concat(data, ignore_index=True)
-
-    # data=pd.read_excel('ProjectUdaan.xlsx')
-    data9 = pd.DataFrame(data)
+    data9=pd.read_excel('ConsolidatedData.xlsx')
     # data1=data1.iloc[2:]
     # print(list(data1))
     data9.columns = ['Symbol', 'Series', 'date', 'Prev Close', 'Open Price', 'High', 'Low', 'Last', 'Close',
