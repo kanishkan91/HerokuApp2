@@ -166,8 +166,8 @@ def SuperTrend(df, period, multiplier, ohlc=['Open', 'High', 'Low', 'Close']):
 #Step 2: Bring in data from AKK and read into df
 
 
-#data=pd.read_excel('ProjectUdaan.xlsx')
-data9=pd.read_excel('ConsolidatedData.xlsx')
+data=pd.read_excel('ProjectUdaan.xlsx')
+#data9=pd.read_excel('ConsolidatedData.xlsx')
 #data1=data1.iloc[2:]
 #print(list(data1))
 data9.columns=['Symbol', 'Series', 'date', 'Prev Close', 'Open Price', 'High', 'Low', 'Last', 'Close', 'Average Price', 'Total Traded Quantity', 'Turnover', 'No. of Trades']
