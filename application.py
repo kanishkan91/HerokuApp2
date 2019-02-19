@@ -96,6 +96,11 @@ def SuperTrend(df, period, multiplier, ohlc=['Open', 'High', 'Low', 'Close']):
             SuperTrend Direction (STX_$period_$multiplier)
     """
 
+    ATR(df, period, ohlc=ohlc)
+    atr = 'ATR_' + str(period)
+    st = 'ST_' + str(period) + '_' + str(multiplier)
+    stx = 'STX_' + str(period) + '_' + str(multiplier)
+
     """
     SuperTrend Algorithm :
 
